@@ -466,7 +466,7 @@
             
             <!-- Step 3: Results and Audio -->
             <div class="step" id="step3">
-                <h2>Your Personalized Hypnosis Session</h2>
+                <h2 style="padding-left:2em">Your Personalized Hypnosis Session</h2>
                 
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
@@ -561,16 +561,12 @@
         }
 
         function skipToGenerate() {
-            // Store user data
+            // Store user data with proper null handling
             const formData = new FormData(document.getElementById('userForm'));
             userData = Object.fromEntries(formData.entries());
             
-            // Convert numeric fields, handling empty values
-            userData.age = userData.age ? parseInt(userData.age) : null;
-            userData.duration_minutes = userData.duration_minutes ? parseInt(userData.duration_minutes) : 10;
-            
-            // Set defaults for empty fields
-            if (!userData.name || userData.name.trim() === '') userData.name = 'Guest';
+            // Clean up the data for API consumption
+            userData = cleanUserData(userData);
             
             // Skip to results without test data
             testResults = {
@@ -588,18 +584,38 @@
             displayResults();
         }
 
+        function cleanUserData(data) {
+            // Convert empty strings to null and handle data types properly
+            const cleaned = {};
+            
+            // Handle name - use 'Guest' for empty values
+            cleaned.name = (data.name && data.name.trim() !== '') ? data.name.trim() : 'Guest';
+            
+            // Handle numeric fields
+            cleaned.age = (data.age && data.age !== '') ? parseInt(data.age) : null;
+            cleaned.duration_minutes = (data.duration_minutes && data.duration_minutes !== '') ? parseInt(data.duration_minutes) : 10;
+            
+            // Handle optional string fields - convert empty strings to null
+            cleaned.personality = (data.personality && data.personality.trim() !== '') ? data.personality.trim() : null;
+            cleaned.custom_goal = (data.custom_goal && data.custom_goal.trim() !== '') ? data.custom_goal.trim() : null;
+            
+            // Handle enum fields - convert empty strings to null
+            cleaned.gender = (data.gender && data.gender !== '') ? data.gender : null;
+            cleaned.belief_orientation = (data.belief_orientation && data.belief_orientation !== '') ? data.belief_orientation : null;
+            
+            // Handle fields with defaults
+            cleaned.tone = data.tone || 'calmed';
+            cleaned.script_type = data.script_type || 'test';
+            cleaned.voice_preference = data.voice_preference || 'authentic_primal';
+            
+            return cleaned;
+        }
+
         function goToStep(step) {
             if (step === 2) {
                 // Store user data (no validation required since all fields are optional)
                 const formData = new FormData(document.getElementById('userForm'));
-                userData = Object.fromEntries(formData.entries());
-                
-                // Convert numeric fields, handling empty values
-                userData.age = userData.age ? parseInt(userData.age) : null;
-                userData.duration_minutes = userData.duration_minutes ? parseInt(userData.duration_minutes) : 10;
-                
-                // Set defaults for empty fields
-                if (!userData.name || userData.name.trim() === '') userData.name = 'Guest';
+                userData = cleanUserData(Object.fromEntries(formData.entries()));
             }
 
             // Hide all steps
@@ -695,8 +711,14 @@
                 });
                 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Failed to generate session');
+                    let errorMessage = 'Failed to generate session';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.detail || JSON.stringify(errorData) || errorMessage;
+                    } catch (parseError) {
+                        errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
                 }
                 
                 const result = await response.json();
