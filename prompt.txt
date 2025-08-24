@@ -1,4 +1,4 @@
-Create a hypnosis script for <name = , age = , gender = , personality = , belief orientation = , tone = , poetic-literary =, authoritative-permissive = , susceptibility =, goal =  > the only thing output should be the text that is read out loud and any [pauses] in it.
+Create a hypnosis script for <name = , age = , gender = , personality = , belief orientation = , tone = , poetic-literary =, authoritative-permissive = , susceptibility =, goal =  > the only thing output should be the text that is read out loud and any <break time="1s" /> in it for pauses.
 
 1. Induction (Stage 1) – Relaxation & Focus
 
@@ -34,7 +34,7 @@ Imagery for Deepening: Expand on the induction’s imagery or introduce new prof
 
 Loss of Awareness of Surroundings: Suggest that external sounds or concerns fade away. E.g., “Any sounds around you – the hum of the air, distant noises – just fade into the background, further relaxing you.” This encourages dissociation from the environment, focusing the mind inward. If appropriate, the script may even mention that the listener’s conscious mind can take a restful back seat (“your conscious mind can gently drift, maybe even daydream, while your subconscious listens”), signaling that it’s okay to let the subconscious be more receptive.
 
-Maintain the same gentle tone as induction, possibly slowing the pace slightly as trance deepens. Pauses become powerful here – the prompt can direct the AI to include occasional longer pauses or silence indicators (for an actual recording, this would be moments of quiet) to let the listener’s experience deepen on its own.
+Maintain the same gentle tone as induction, possibly slowing the pace slightly as trance deepens. Pauses become powerful here – the prompt can direct the AI to include occasional longer pauses using <break time="2s" /> or <break time="3s" /> for silence indicators (for ElevenLabs voice synthesis) to let the listener's experience deepen on its own.
 
 Design Rationale: The Deepening stage serves to solidify and intensify the trance achieved by the induction. While the induction gets the listener relaxed and focused, deepening ensures they reach the heightened level of suggestibility optimal for making therapeutic suggestions. In a high-quality script, this section uses methods that are known in hypnotherapy to deepen trance – such as counting down, which many find effective in guiding them to a deeper state. These techniques work by giving the mind a structured expectation of increasing relaxation (for example, the listener knows that by the time “1” is reached, they should be very relaxed – and this often becomes a self-fulfilling prophecy).
 
