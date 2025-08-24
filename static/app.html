@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HypnosAI - Personalized Hypnosis Journey</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: white;
+            height: 100%;
+            width: 33.33%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .step {
+            display: none;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        .step h2 {
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .question {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .question h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .question-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .option {
+            display: block;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 12px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        .btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .score-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+        }
+        
+        .score-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .score-level {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .recommendations {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .recommendations h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+        
+        .recommendations ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .recommendations li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .recommendations li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .audio-section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+        
+        .script-text {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-style: italic;
+            line-height: 1.8;
+            color: #2d3748;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .audio-player {
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌟 HypnosAI</h1>
+            <p>Your Personalized Hypnosis Journey</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Step 1: User Information -->
+            <div class="step active" id="step1">
+                <h2>Tell Us About Yourself</h2>
+                <form id="userForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Name:</label>
+                            <input type="text" id="name" name="name" required maxlength="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="age">Age:</label>
+                            <input type="number" id="age" name="age" required min="18" max="100">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="gender">Gender:</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="non_binary">Non-binary</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="belief_orientation">Belief Orientation:</label>
+                            <select id="belief_orientation" name="belief_orientation" required>
+                                <option value="">Select orientation</option>
+                                <option value="spiritual">Spiritual</option>
+                                <option value="scientific">Scientific</option>
+                                <option value="neutral">Neutral</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="personality">Personality Description:</label>
+                        <textarea id="personality" name="personality" required minlength="10" maxlength="500" placeholder="Describe your personality, traits, and what makes you unique..."></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tone">Preferred Tone:</label>
+                            <select id="tone" name="tone" required>
+                                <option value="">Select tone</option>
+                                <option value="calmed">Calmed</option>
+                                <option value="spiritual">Spiritual</option>
+                                <option value="conversational">Conversational</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="script_type">Session Type:</label>
+                            <select id="script_type" name="script_type" required>
+                                <option value="">Select type</option>
+                                <option value="test">General Relaxation</option>
+                                <option value="flight">Elevating Journey</option>
+                                <option value="next">New Beginnings</option>
+                                <option value="low">Deep Relaxation</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="voice_preference">Voice Style:</label>
+                            <select id="voice_preference" name="voice_preference" required>
+                                <option value="">Select voice style</option>
+                                <option value="poetry_literary">Poetry & Literary</option>
+                                <option value="authentic_primal">Authentic & Primal</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="duration_minutes">Duration (minutes):</label>
+                            <input type="number" id="duration_minutes" name="duration_minutes" value="10" min="5" max="60">
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="button-group">
+                    <div></div>
+                    <button class="btn btn-primary" onclick="goToStep(2)">Take Predisposition Test</button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Predisposition Test -->
+            <div class="step" id="step2">
+                <h2>Hypnosis Predisposition Assessment</h2>
+                <p style="margin-bottom: 30px; color: #718096;">This brief assessment helps us understand how you naturally respond to hypnotic suggestions, allowing us to create the most effective session for you.</p>
+                
+                <form id="testForm">
+                    <div id="questions"></div>
+                </form>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+                    <button class="btn btn-primary" onclick="submitTest()" id="submitTestBtn">View Results & Generate Session</button>
+                </div>
+            </div>
+            
+            <!-- Step 3: Results and Audio -->
+            <div class="step" id="step3">
+                <h2>Your Personalized Hypnosis Session</h2>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing your responses and creating your personalized hypnosis session...</p>
+                </div>
+                
+                <div class="results" id="results" style="display: none;">
+                    <div class="score-display" id="scoreDisplay">
+                        <div class="score-number" id="scoreNumber"></div>
+                        <div class="score-level" id="scoreLevel"></div>
+                        <div id="scoreDescription"></div>
+                    </div>
+                    
+                    <div class="recommendations" id="recommendations">
+                        <h3>Personalized Recommendations</h3>
+                        <ul id="recommendationsList"></ul>
+                    </div>
+                    
+                    <div class="audio-section" id="audioSection" style="display: none;">
+                        <h3>Your Custom Hypnosis Session</h3>
+                        <div class="script-text" id="scriptText"></div>
+                        <audio controls class="audio-player" id="audioPlayer">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                </div>
+                
+                <div class="error" id="error">
+                    <strong>Error:</strong> <span id="errorMessage"></span>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">Back to Test</button>
+                    <button class="btn btn-primary" onclick="startOver()">Start New Session</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let testQuestions = [];
+        let userAnswers = [];
+        let userData = {};
+        let testResults = {};
+
+        // Load questions when page loads
+        window.onload = function() {
+            loadQuestions();
+        };
+
+        async function loadQuestions() {
+            try {
+                const response = await fetch('/api/test-questions');
+                testQuestions = await response.json();
+                renderQuestions();
+            } catch (error) {
+                console.error('Error loading questions:', error);
+            }
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questions');
+            container.innerHTML = '';
+
+            testQuestions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <div class="question-number">${index + 1}</div>
+                    <h3>${question.question}</h3>
+                    ${question.options.map((option, optionIndex) => `
+                        <label class="option">
+                            <input type="radio" name="question_${question.id}" value="${optionIndex}" onchange="updateAnswer(${question.id}, ${optionIndex})">
+                            ${option}
+                        </label>
+                    `).join('')}
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function updateAnswer(questionId, answerIndex) {
+            userAnswers[questionId - 1] = answerIndex;
+            updateSubmitButton();
+        }
+
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submitTestBtn');
+            const allAnswered = userAnswers.length === testQuestions.length && 
+                               userAnswers.every(answer => answer !== undefined);
+            submitBtn.disabled = !allAnswered;
+        }
+
+        function goToStep(step) {
+            if (step === 2) {
+                // Validate user form before going to test
+                const form = document.getElementById('userForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                // Store user data
+                const formData = new FormData(form);
+                userData = Object.fromEntries(formData.entries());
+                userData.age = parseInt(userData.age);
+                userData.duration_minutes = parseInt(userData.duration_minutes);
+            }
+
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            
+            // Show target step
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            // Update progress bar
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = `${(step / 3) * 100}%`;
+            
+            currentStep = step;
+        }
+
+        async function submitTest() {
+            // Calculate test score
+            try {
+                const response = await fetch('/api/calculate-score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answers: userAnswers })
+                });
+                
+                testResults = await response.json();
+                
+                goToStep(3);
+                displayResults();
+                
+            } catch (error) {
+                console.error('Error calculating score:', error);
+                showError('Failed to calculate test results');
+            }
+        }
+
+        function displayResults() {
+            // Show score
+            document.getElementById('scoreNumber').textContent = `${testResults.percentage}%`;
+            document.getElementById('scoreLevel').textContent = testResults.level;
+            document.getElementById('scoreDescription').textContent = testResults.description;
+            
+            // Show recommendations
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = '';
+            testResults.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendationsList.appendChild(li);
+            });
+            
+            // Show results section
+            document.getElementById('results').style.display = 'block';
+            
+            // Generate audio session
+            generateAudioSession();
+        }
+
+        async function generateAudioSession() {
+            const audioSection = document.getElementById('audioSection');
+            const loading = document.getElementById('loading');
+            
+            loading.style.display = 'block';
+            
+            try {
+                const sessionData = {
+                    ...userData,
+                    predisposition_score: testResults.percentage,
+                    predisposition_level: testResults.level
+                };
+                
+                const response = await fetch('/generate-hypnosis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sessionData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to generate session');
+                }
+                
+                const result = await response.json();
+                
+                // Display script and audio
+                document.getElementById('scriptText').textContent = result.script;
+                document.getElementById('audioPlayer').src = result.audio_url;
+                
+                audioSection.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error generating session:', error);
+                showError(error.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').style.display = 'block';
+        }
+
+        function startOver() {
+            // Reset all data
+            currentStep = 1;
+            userAnswers = [];
+            userData = {};
+            testResults = {};
+            
+            // Reset forms
+            document.getElementById('userForm').reset();
+            document.getElementById('testForm').reset();
+            
+            // Hide error and results
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('audioSection').style.display = 'none';
+            
+            // Go to step 1
+            goToStep(1);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: hypnosai
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: ELEVENLABS_API_KEY
+        sync: false
+    disk:
+      name: hypnosai-disk
+      mountPath: /opt/render/project/src/static/audio
+      sizeGB: 1
