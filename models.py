@@ -40,6 +40,7 @@ class UserInput(BaseModel):
     duration_minutes: Optional[int] = Field(default=10, ge=5, le=60)
     predisposition_score: Optional[float] = Field(default=None, ge=0, le=100)
     predisposition_level: Optional[str] = Field(default=None)
+    custom_goal: Optional[str] = Field(default=None, max_length=200)
 
 class HypnosisResponse(BaseModel):
     script: str

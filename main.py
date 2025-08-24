@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 from models import UserInput, HypnosisResponse
-from hypnosis_generator import HypnosisGenerator
+from ai_script_generator import AIScriptGenerator
 from voice_synthesizer_simple import VoiceSynthesizerSimple
 from predisposition_test import PredispositionTest
 from typing import List
@@ -14,7 +14,7 @@ load_dotenv()
 
 app = FastAPI(title="HypnosAI", description="AI-powered hypnosis generation")
 
-hypnosis_generator = HypnosisGenerator()
+script_generator = AIScriptGenerator(gemini_api_key=os.getenv("GEMINI_API_KEY"))
 voice_synthesizer = VoiceSynthesizerSimple(api_key=os.getenv("ELEVENLABS_API_KEY"))
 predisposition_test = PredispositionTest()
 
@@ -37,7 +37,7 @@ async def calculate_score(request: dict):
 @app.post("/generate-hypnosis", response_model=HypnosisResponse)
 async def generate_hypnosis(user_input: UserInput):
     try:
-        script = hypnosis_generator.generate_script(user_input)
+        script = script_generator.generate_script(user_input)
         audio_url = await voice_synthesizer.generate_voice(
             script=script,
             tone=user_input.tone,
