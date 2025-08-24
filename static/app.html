@@ -307,6 +307,139 @@
             margin: 20px 0;
         }
         
+        /* Fullscreen Audio Player with Spiral */
+        .fullscreen-player {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        
+        .fullscreen-player.active {
+            display: flex;
+        }
+        
+        .spiral-background {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100vh;
+            height: 100vh;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(
+                circle,
+                transparent 0%,
+                transparent 10%,
+                #fff 10.5%,
+                #fff 11%,
+                transparent 11.5%,
+                transparent 20%,
+                #fff 20.5%,
+                #fff 21%,
+                transparent 21.5%,
+                transparent 30%,
+                #fff 30.5%,
+                #fff 31%,
+                transparent 31.5%,
+                transparent 40%,
+                #fff 40.5%,
+                #fff 41%,
+                transparent 41.5%,
+                transparent 50%,
+                #fff 50.5%,
+                #fff 51%,
+                transparent 51.5%
+            );
+            border-radius: 50%;
+            animation: spiralRotate 8s linear infinite;
+            opacity: 0.8;
+        }
+        
+        @keyframes spiralRotate {
+            0% { 
+                transform: translate(-50%, -50%) rotate(0deg) scale(1);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: translate(-50%, -50%) rotate(180deg) scale(1.2);
+                opacity: 0.6;
+            }
+            100% { 
+                transform: translate(-50%, -50%) rotate(360deg) scale(1);
+                opacity: 0.8;
+            }
+        }
+        
+        .fullscreen-audio-controls {
+            position: relative;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            min-width: 400px;
+        }
+        
+        .fullscreen-audio-controls h3 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .fullscreen-audio-controls audio {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+        
+        .fullscreen-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .enter-fullscreen-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .enter-fullscreen-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
         .error {
             background: #fed7d7;
             color: #c53030;
@@ -491,6 +624,9 @@
                         <audio controls class="audio-player" id="audioPlayer">
                             Your browser does not support the audio element.
                         </audio>
+                        <button class="enter-fullscreen-btn" onclick="enterFullscreenMode()" id="fullscreenBtn" style="display: none;">
+                            🎧 Enter Immersive Mode
+                        </button>
                     </div>
                 </div>
                 
@@ -503,6 +639,21 @@
                     <button class="btn btn-primary" onclick="startOver()">Start New Session</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Audio Player -->
+    <div class="fullscreen-player" id="fullscreenPlayer">
+        <div class="spiral-background"></div>
+        <button class="fullscreen-close" onclick="exitFullscreenMode()" title="Exit Fullscreen">×</button>
+        <div class="fullscreen-audio-controls">
+            <h3>🎧 Immersive Hypnosis Experience</h3>
+            <audio controls id="fullscreenAudio">
+                Your browser does not support the audio element.
+            </audio>
+            <p style="color: #ccc; font-size: 14px; margin-top: 15px;">
+                Relax, breathe deeply, and focus on the spiral as you listen
+            </p>
         </div>
     </div>
 
@@ -730,6 +881,8 @@
                 if (result.audio_url.endsWith('.mp3')) {
                     document.getElementById('audioPlayer').src = result.audio_url;
                     document.getElementById('audioPlayer').style.display = 'block';
+                    // Show fullscreen button for audio files
+                    document.getElementById('fullscreenBtn').style.display = 'inline-block';
                 } else {
                     // It's a text file, hide audio player and show download link
                     document.getElementById('audioPlayer').style.display = 'none';
@@ -777,6 +930,80 @@
             // Go to step 1
             goToStep(1);
         }
+
+        function enterFullscreenMode() {
+            const fullscreenPlayer = document.getElementById('fullscreenPlayer');
+            const fullscreenAudio = document.getElementById('fullscreenAudio');
+            const regularAudio = document.getElementById('audioPlayer');
+            
+            // Copy audio source and current time
+            fullscreenAudio.src = regularAudio.src;
+            fullscreenAudio.currentTime = regularAudio.currentTime;
+            
+            // Show fullscreen player
+            fullscreenPlayer.classList.add('active');
+            
+            // Pause regular audio and play fullscreen audio
+            regularAudio.pause();
+            
+            // Try to enter browser fullscreen
+            if (fullscreenPlayer.requestFullscreen) {
+                fullscreenPlayer.requestFullscreen().catch(e => console.log('Fullscreen not supported'));
+            } else if (fullscreenPlayer.webkitRequestFullscreen) {
+                fullscreenPlayer.webkitRequestFullscreen();
+            } else if (fullscreenPlayer.msRequestFullscreen) {
+                fullscreenPlayer.msRequestFullscreen();
+            }
+            
+            // Auto-play in fullscreen (user gesture already occurred)
+            setTimeout(() => {
+                fullscreenAudio.play().catch(e => console.log('Auto-play failed'));
+            }, 500);
+        }
+
+        function exitFullscreenMode() {
+            const fullscreenPlayer = document.getElementById('fullscreenPlayer');
+            const fullscreenAudio = document.getElementById('fullscreenAudio');
+            const regularAudio = document.getElementById('audioPlayer');
+            
+            // Copy current time back to regular audio
+            regularAudio.currentTime = fullscreenAudio.currentTime;
+            
+            // Hide fullscreen player
+            fullscreenPlayer.classList.remove('active');
+            
+            // Pause fullscreen audio
+            fullscreenAudio.pause();
+            
+            // Exit browser fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(e => console.log('Exit fullscreen failed'));
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+
+        // Handle ESC key to exit fullscreen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const fullscreenPlayer = document.getElementById('fullscreenPlayer');
+                if (fullscreenPlayer.classList.contains('active')) {
+                    exitFullscreenMode();
+                }
+            }
+        });
+
+        // Handle fullscreen change events
+        document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement) {
+                const fullscreenPlayer = document.getElementById('fullscreenPlayer');
+                if (fullscreenPlayer.classList.contains('active')) {
+                    exitFullscreenMode();
+                }
+            }
+        });
     </script>
 </body>
 </html>
