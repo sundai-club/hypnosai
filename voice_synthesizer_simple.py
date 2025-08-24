@@ -5,50 +5,29 @@ import uuid
 from typing import Optional
 
 class VoiceSynthesizerSimple:
-    """Simplified voice synthesizer that can work without ElevenLabs if needed"""
+    """Voice synthesizer using direct ElevenLabs API calls"""
     
     def __init__(self, api_key: str = None):
         self.api_key = api_key
         self.use_elevenlabs = api_key is not None
+        self.base_url = "https://api.elevenlabs.io/v1"
         
         if self.use_elevenlabs:
-            try:
-                # Try different import patterns for different ElevenLabs versions
-                try:
-                    # New SDK version
-                    from elevenlabs import ElevenLabs
-                    from elevenlabs import generate, save, voices, Voice
-                    self.client = ElevenLabs(api_key=api_key)
-                    self.use_client = True
-                except ImportError:
-                    # Older SDK version
-                    from elevenlabs import generate, save, voices, Voice
-                    self.client = None
-                    self.use_client = False
-                
-                self.generate_lib = generate
-                self.save_lib = save
-                self.voices_lib = voices
-                self.Voice = Voice
-                
-                # Set environment variable for API key
-                os.environ["ELEVENLABS_API_KEY"] = api_key
-                print(f"ElevenLabs initialized with API key: {api_key[:10]}...")
-            except ImportError as e:
-                print(f"ElevenLabs not available: {e}, using fallback")
-                self.use_elevenlabs = False
+            print(f"ElevenLabs API initialized with key: {api_key[:10]}...")
+        else:
+            print("No ElevenLabs API key provided, using text fallback")
         
-        # Voice mappings for different preferences and tones
+        # Voice IDs for different preferences and tones (using direct voice IDs)
         self.voice_mappings = {
             VoicePreference.POETRY_LITERARY: {
-                Tone.CALMED: "Rachel",
-                Tone.SPIRITUAL: "Bella",
-                Tone.CONVERSATIONAL: "Elli",
+                Tone.CALMED: "21m00Tcm4TlvDq8ikWAM",  # Rachel
+                Tone.SPIRITUAL: "EXAVITQu4vr4xnSDxMaL",  # Bella
+                Tone.CONVERSATIONAL: "MF3mGyEYCl7XYWbV9V6O",  # Elli
             },
             VoicePreference.AUTHENTIC_PRIMAL: {
-                Tone.CALMED: "Josh",
-                Tone.SPIRITUAL: "Antoni", 
-                Tone.CONVERSATIONAL: "Adam",
+                Tone.CALMED: "TxGEqnHWrfWFTfGW9XjX",  # Josh
+                Tone.SPIRITUAL: "ErXwobaYiN019PkySvjV",  # Antoni
+                Tone.CONVERSATIONAL: "pNInz6obpgDQGcFmaJgB",  # Adam
             }
         }
 
@@ -60,38 +39,41 @@ class VoiceSynthesizerSimple:
 
     async def _generate_with_elevenlabs(self, script: str, tone: Tone, voice_type: VoicePreference) -> str:
         try:
-            voice_name = self.voice_mappings[voice_type][tone]
+            voice_id = self.voice_mappings[voice_type][tone]
             
-            # Use appropriate method based on SDK version
-            if self.use_client and self.client:
-                try:
-                    audio = self.client.generate(
-                        text=script,
-                        voice=self._get_voice_id(voice_name),
-                        model="eleven_multilingual_v2"
-                    )
-                except Exception as e:
-                    print(f"Client method failed: {e}, trying direct method")
-                    audio = self.generate_lib(
-                        text=script,
-                        voice=self.Voice(voice_id=self._get_voice_id(voice_name)),
-                        model="eleven_multilingual_v2"
-                    )
+            # Direct API call to ElevenLabs
+            url = f"{self.base_url}/text-to-speech/{voice_id}"
+            
+            headers = {
+                "Accept": "audio/mpeg",
+                "Content-Type": "application/json",
+                "xi-api-key": self.api_key
+            }
+            
+            data = {
+                "text": script,
+                "model_id": "eleven_multilingual_v2",
+                "voice_settings": {
+                    "stability": 0.5,
+                    "similarity_boost": 0.75
+                }
+            }
+            
+            response = requests.post(url, json=data, headers=headers)
+            
+            if response.status_code == 200:
+                filename = f"hypnosis_{uuid.uuid4().hex}.mp3"
+                filepath = f"static/audio/{filename}"
+                
+                os.makedirs("static/audio", exist_ok=True)
+                
+                with open(filepath, 'wb') as f:
+                    f.write(response.content)
+                
+                return f"/static/audio/{filename}"
             else:
-                # Use direct function call for older SDK
-                audio = self.generate_lib(
-                    text=script,
-                    voice=self.Voice(voice_id=self._get_voice_id(voice_name)),
-                    model="eleven_multilingual_v2"
-                )
-            
-            filename = f"hypnosis_{uuid.uuid4().hex}.mp3"
-            filepath = f"static/audio/{filename}"
-            
-            os.makedirs("static/audio", exist_ok=True)
-            self.save_lib(audio, filepath)
-            
-            return f"/static/audio/{filename}"
+                print(f"ElevenLabs API error: {response.status_code} - {response.text}")
+                return await self._generate_fallback(script, tone, voice_type)
             
         except Exception as e:
             print(f"ElevenLabs failed: {e}, using fallback")
@@ -117,45 +99,15 @@ class VoiceSynthesizerSimple:
         except Exception as e:
             raise Exception(f"Voice generation failed: {str(e)}")
 
-    def _get_voice_id(self, voice_name: str) -> str:
-        """Get voice ID from voice name"""
-        if not self.use_elevenlabs:
-            return "fallback"
-            
-        try:
-            # Use appropriate method based on SDK version
-            if self.use_client and self.client:
-                try:
-                    all_voices = self.client.voices.get_all()
-                    for voice in all_voices.voices:
-                        if voice.name == voice_name:
-                            return voice.voice_id
-                    return all_voices.voices[0].voice_id if all_voices.voices else "21m00Tcm4TlvDq8ikWAM"
-                except Exception as e:
-                    print(f"Client voice lookup failed: {e}, trying direct method")
-                    # Fallback to old method
-                    all_voices = self.voices_lib()
-                    for voice in all_voices:
-                        if voice.name == voice_name:
-                            return voice.voice_id
-                    return all_voices[0].voice_id if all_voices else "21m00Tcm4TlvDq8ikWAM"
-            else:
-                # Use direct function call for older SDK
-                all_voices = self.voices_lib()
-                for voice in all_voices:
-                    if voice.name == voice_name:
-                        return voice.voice_id
-                return all_voices[0].voice_id if all_voices else "21m00Tcm4TlvDq8ikWAM"
-        except Exception as e:
-            print(f"Voice lookup failed: {e}, using default voice")
-            return "21m00Tcm4TlvDq8ikWAM"
 
     def get_available_voices(self):
         """Get list of available voices"""
         if not self.use_elevenlabs:
             return "ElevenLabs not configured"
             
-        try:
-            return [(voice.name, voice.voice_id) for voice in self.voices_lib()]
-        except Exception as e:
-            return f"Error fetching voices: {str(e)}"
+        # Return the predefined voice mappings
+        voices = []
+        for voice_type, tone_voices in self.voice_mappings.items():
+            for tone, voice_id in tone_voices.items():
+                voices.append((f"{voice_type.value}_{tone.value}", voice_id))
+        return voices
