@@ -9,13 +9,17 @@ class VoiceSynthesizerSimple:
     
     def __init__(self, api_key: str = None):
         self.api_key = api_key
-        self.use_elevenlabs = api_key is not None
+        self.enable_voice_generation = os.getenv("ENABLE_VOICE_GENERATION", "false").lower() == "true"
+        self.use_elevenlabs = api_key is not None and self.enable_voice_generation
         self.base_url = "https://api.elevenlabs.io/v1"
+        self.fallback_mp3_url = "https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3"
         
         if self.use_elevenlabs:
             print(f"ElevenLabs API initialized with key: {api_key[:10]}...")
+        elif not self.enable_voice_generation:
+            print("Voice generation disabled, using fallback MP3")
         else:
-            print("No ElevenLabs API key provided, using text fallback")
+            print("No ElevenLabs API key provided, using fallback MP3")
         
         # Voice IDs for different preferences and tones (using direct voice IDs)
         self.voice_mappings = {
@@ -80,24 +84,53 @@ class VoiceSynthesizerSimple:
             return await self._generate_fallback(script, tone, voice_type)
 
     async def _generate_fallback(self, script: str, tone: Tone, voice_type: VoicePreference) -> str:
-        """Fallback method that creates a text file instead of audio"""
+        """Fallback method that downloads and returns the fallback MP3 file"""
         try:
-            filename = f"hypnosis_script_{uuid.uuid4().hex}.txt"
-            filepath = f"static/audio/{filename}"
+            # Download the fallback MP3 file
+            response = requests.get(self.fallback_mp3_url)
             
-            os.makedirs("static/audio", exist_ok=True)
-            
-            # Create a text file with the script
-            with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(f"Hypnosis Script ({tone.value}, {voice_type.value})\n")
-                f.write("=" * 50 + "\n\n")
-                f.write(script)
-                f.write(f"\n\nNote: Audio generation requires ElevenLabs API key.")
-            
-            return f"/static/audio/{filename}"
+            if response.status_code == 200:
+                filename = f"hypnosis_fallback_{uuid.uuid4().hex}.mp3"
+                filepath = f"static/audio/{filename}"
+                
+                os.makedirs("static/audio", exist_ok=True)
+                
+                with open(filepath, 'wb') as f:
+                    f.write(response.content)
+                
+                return f"/static/audio/{filename}"
+            else:
+                # If download fails, create a text file as last resort
+                filename = f"hypnosis_script_{uuid.uuid4().hex}.txt"
+                filepath = f"static/audio/{filename}"
+                
+                os.makedirs("static/audio", exist_ok=True)
+                
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    f.write(f"Hypnosis Script ({tone.value}, {voice_type.value})\n")
+                    f.write("=" * 50 + "\n\n")
+                    f.write(script)
+                    f.write(f"\n\nNote: Voice generation is disabled or unavailable.")
+                
+                return f"/static/audio/{filename}"
             
         except Exception as e:
-            raise Exception(f"Voice generation failed: {str(e)}")
+            # If download fails, create a text file as last resort
+            try:
+                filename = f"hypnosis_script_{uuid.uuid4().hex}.txt"
+                filepath = f"static/audio/{filename}"
+                
+                os.makedirs("static/audio", exist_ok=True)
+                
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    f.write(f"Hypnosis Script ({tone.value}, {voice_type.value})\n")
+                    f.write("=" * 50 + "\n\n")
+                    f.write(script)
+                    f.write(f"\n\nNote: Voice generation failed: {str(e)}")
+                
+                return f"/static/audio/{filename}"
+            except:
+                raise Exception(f"Voice generation failed: {str(e)}")
 
 
     def get_available_voices(self):
