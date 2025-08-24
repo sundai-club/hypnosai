@@ -37,9 +37,9 @@ class UserInput(BaseModel):
     tone: Tone
     script_type: ScriptType = ScriptType.TEST
     voice_preference: VoicePreference = VoicePreference.AUTHENTIC_PRIMAL
-    duration_minutes: Optional[int] = Field(10, ge=5, le=60)
-    predisposition_score: Optional[float] = Field(None, ge=0, le=100)
-    predisposition_level: Optional[str] = None
+    duration_minutes: Optional[int] = Field(default=10, ge=5, le=60)
+    predisposition_score: Optional[float] = Field(default=None, ge=0, le=100)
+    predisposition_level: Optional[str] = Field(default=None)
 
 class HypnosisResponse(BaseModel):
     script: str

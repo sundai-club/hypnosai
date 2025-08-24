@@ -656,7 +656,23 @@
                 
                 // Display script and audio
                 document.getElementById('scriptText').textContent = result.script;
-                document.getElementById('audioPlayer').src = result.audio_url;
+                
+                // Check if we got an audio file or text file
+                if (result.audio_url.endsWith('.mp3')) {
+                    document.getElementById('audioPlayer').src = result.audio_url;
+                    document.getElementById('audioPlayer').style.display = 'block';
+                } else {
+                    // It's a text file, hide audio player and show download link
+                    document.getElementById('audioPlayer').style.display = 'none';
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = result.audio_url;
+                    downloadLink.download = 'hypnosis_script.txt';
+                    downloadLink.textContent = '📄 Download Script as Text File';
+                    downloadLink.className = 'btn btn-secondary';
+                    downloadLink.style.display = 'inline-block';
+                    downloadLink.style.marginTop = '20px';
+                    document.getElementById('audioSection').appendChild(downloadLink);
+                }
                 
                 audioSection.style.display = 'block';
                 

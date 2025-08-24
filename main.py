@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from models import UserInput, HypnosisResponse
 from hypnosis_generator import HypnosisGenerator
-from voice_synthesizer import VoiceSynthesizer
+from voice_synthesizer_simple import VoiceSynthesizerSimple
 from predisposition_test import PredispositionTest
 from typing import List
 
@@ -15,7 +15,7 @@ load_dotenv()
 app = FastAPI(title="HypnosAI", description="AI-powered hypnosis generation")
 
 hypnosis_generator = HypnosisGenerator()
-voice_synthesizer = VoiceSynthesizer(api_key=os.getenv("ELEVENLABS_API_KEY"))
+voice_synthesizer = VoiceSynthesizerSimple(api_key=os.getenv("ELEVENLABS_API_KEY"))
 predisposition_test = PredispositionTest()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
