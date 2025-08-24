@@ -18,7 +18,7 @@ class AIScriptGenerator:
             return self._generate_with_templates(user_input)
     
     def _generate_with_ai(self, user_input: UserInput) -> str:
-        """Generate hypnosis script using Gemini AI with the comprehensive prompt"""
+        """Generate hypnosis script using Gemini AI with the comprehensive prompt from prompt.txt"""
         
         # Use custom goal if provided, otherwise map script types to goals
         if user_input.custom_goal and user_input.custom_goal.strip():
@@ -43,41 +43,29 @@ class AIScriptGenerator:
         else:
             susceptibility = "Medium"
         
-        # Build the comprehensive prompt
-        prompt = f"""Create a hypnosis script for <name = {user_input.name}, age = {user_input.age}, gender = {user_input.gender.value}, personality = {user_input.personality}, belief orientation = {user_input.belief_orientation.value}, tone = {user_input.tone.value}, poetic-literary = {user_input.voice_preference == VoicePreference.POETRY_LITERARY}, authoritative-permissive = permissive, susceptibility = {susceptibility}, goal = {goal}> the only thing output should be the text that is read out loud and any [pauses] in it.
-
-1. Induction (Stage 1) – Relaxation & Focus
-
-The script begins with the Induction phase, aiming to gently capture the listener's attention, build rapport, and guide them into initial relaxation. Start with a warm, friendly greeting to establish rapport and safety. Guide the listener to close their eyes and focus their attention inward using progressive muscle relaxation. Incorporate breathing cues and mindfulness with slow, deep breaths. Begin using descriptive imagery to engage the imagination early with a serene scene. Use positive and permissive language throughout ("allow yourself to relax" rather than commands).
-
-2. Deepening (Stage 2) – Intensification of Trance
-
-Use explicit deepening suggestions with phrases like "deeper and deeper," "further down," "more and more relaxed." Incorporate a countdown from 10 to 1 or similar structured deepening method, where each number doubles relaxation. Use fractionation techniques if appropriate - briefly bringing partially out then back deeper. Expand on imagery for deepening and suggest loss of awareness of surroundings. Maintain gentle tone, possibly slowing pace as trance deepens.
-
-3. Goal-Specific Suggestion Segment (Stage 3) – Therapeutic Suggestions & Imagery
-
-Address the specific goal directly with positive suggestions and affirmations phrased positively and in present/near-future tense. Use metaphors and imagery related to the goal. Leverage future pacing - having the listener mentally rehearse successful future scenarios. Incorporate indirect therapeutic techniques like brief anecdotes or stories. Cover multiple angles of the goal comprehensively. Maintain hypnotic tone throughout.
-
-4. Emergence (Stage 4) – Reorientation/Waking Up
-
-Since this is for {user_input.script_type.value} (not sleep), include emergence. Gently signal the session is ending. Count up from 1 to 5, telling listener they'll be fully awake, refreshed and alert at 5. Include grounding and affirmation after the count. Ensure emergence is gradual and gentle, never abrupt.
-
-Personalization Guidelines:
-- Adjust for {user_input.belief_orientation.value} belief orientation: {"Use spiritual language, energy concepts, divine references" if user_input.belief_orientation == BeliefOrientation.SPIRITUAL else "Use scientific/medical terminology, neuroplasticity concepts" if user_input.belief_orientation == BeliefOrientation.SCIENTIFIC else "Use neutral, universally appealing language"}
-- Use {user_input.tone.value} tone: {"Incorporate spiritual concepts, soulful style, divine light, energy" if user_input.tone == Tone.SPIRITUAL else "Sound like friendly conversation, casual reassurances, personal asides" if user_input.tone == Tone.CONVERSATIONAL else "Professional, straightforward, possibly mild technical terms"}
-- Voice preference {user_input.voice_preference.value}: {"Rich descriptive language, rhythmic phrases, elegant metaphors, poetic imagery" if user_input.voice_preference == VoicePreference.POETRY_LITERARY else "Direct, authentic, grounded language that resonates deeply"}
-- Susceptibility level {susceptibility}: {"Use longer, more repetitive induction and deepening, extra reassurances, indirect suggestions, go slow and steady" if susceptibility == "Low" else "Use rapid or advanced techniques, brief induction, more direct suggestions, complex techniques" if susceptibility == "High" else "Use standard balanced approach of direct and indirect methods"}
-
-Personality adaptation for "{user_input.personality}":
-- Include specific references that acknowledge their personality traits
-- Use language and metaphors that would resonate with their described characteristics
-
-The script should be approximately {user_input.duration_minutes} minutes when read aloud (roughly 150-200 words per minute of speech). Include natural [pause] markers where appropriate for breathing and integration.
-
-Output only the spoken script text with [pause] markers. Do not include stage headings or explanations."""
+        try:
+            # Read the comprehensive prompt from prompt.txt
+            with open('prompt.txt', 'r', encoding='utf-8') as f:
+                base_prompt = f.read()
+            
+            # Replace the placeholders in the prompt with user data
+            prompt = base_prompt.replace('<name = ', f'<name = {user_input.name}')
+            prompt = prompt.replace('age = ', f'age = {user_input.age}')
+            prompt = prompt.replace('gender = ', f'gender = {user_input.gender.value}')
+            prompt = prompt.replace('personality = ', f'personality = {user_input.personality}')
+            prompt = prompt.replace('belief orientation = ', f'belief orientation = {user_input.belief_orientation.value}')
+            prompt = prompt.replace('tone = ', f'tone = {user_input.tone.value}')
+            prompt = prompt.replace('poetic-literary =', f'poetic-literary = {user_input.voice_preference == VoicePreference.POETRY_LITERARY}')
+            prompt = prompt.replace('authoritative-permissive = ', f'authoritative-permissive = permissive')
+            prompt = prompt.replace('susceptibility =', f'susceptibility = {susceptibility}')
+            prompt = prompt.replace('goal =  >', f'goal = {goal}>')
+            
+        except FileNotFoundError:
+            print("Warning: prompt.txt not found, using fallback generation")
+            return self._generate_with_templates(user_input)
 
         try:
-            # Call Gemini API
+            # Call Gemini API with the prompt from file
             response = requests.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={self.gemini_api_key}",
                 headers={"Content-Type": "application/json"},
