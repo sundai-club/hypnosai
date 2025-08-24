@@ -1,0 +1,2 @@
+# hypnosai
+Hypnosis AI generation
