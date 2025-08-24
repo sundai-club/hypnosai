@@ -14,14 +14,21 @@ class VoiceSynthesizerSimple:
         if self.use_elevenlabs:
             try:
                 # Try to import and use ElevenLabs
+                from elevenlabs.client import ElevenLabs
                 from elevenlabs import generate, save, voices, Voice
+                
+                # Set up the client with API key
+                self.client = ElevenLabs(api_key=api_key)
                 self.generate_lib = generate
                 self.save_lib = save
                 self.voices_lib = voices
                 self.Voice = Voice
+                
+                # Also set environment variable as fallback
                 os.environ["ELEVENLABS_API_KEY"] = api_key
-            except ImportError:
-                print("ElevenLabs not available, using fallback")
+                print(f"ElevenLabs initialized with API key: {api_key[:10]}...")
+            except ImportError as e:
+                print(f"ElevenLabs not available: {e}, using fallback")
                 self.use_elevenlabs = False
         
         # Voice mappings for different preferences and tones
@@ -48,11 +55,20 @@ class VoiceSynthesizerSimple:
         try:
             voice_name = self.voice_mappings[voice_type][tone]
             
-            audio = self.generate_lib(
-                text=script,
-                voice=self.Voice(voice_id=self._get_voice_id(voice_name)),
-                model="eleven_multilingual_v2"
-            )
+            # Try using the client first, then fall back to direct function call
+            try:
+                audio = self.client.generate(
+                    text=script,
+                    voice=self._get_voice_id(voice_name),
+                    model="eleven_multilingual_v2"
+                )
+            except:
+                # Fallback to the old method
+                audio = self.generate_lib(
+                    text=script,
+                    voice=self.Voice(voice_id=self._get_voice_id(voice_name)),
+                    model="eleven_multilingual_v2"
+                )
             
             filename = f"hypnosis_{uuid.uuid4().hex}.mp3"
             filepath = f"static/audio/{filename}"
@@ -92,12 +108,22 @@ class VoiceSynthesizerSimple:
             return "fallback"
             
         try:
-            all_voices = self.voices_lib()
-            for voice in all_voices:
-                if voice.name == voice_name:
-                    return voice.voice_id
-            return all_voices[0].voice_id if all_voices else "21m00Tcm4TlvDq8ikWAM"
-        except:
+            # Try using the client first
+            try:
+                all_voices = self.client.voices.get_all()
+                for voice in all_voices.voices:
+                    if voice.name == voice_name:
+                        return voice.voice_id
+                return all_voices.voices[0].voice_id if all_voices.voices else "21m00Tcm4TlvDq8ikWAM"
+            except:
+                # Fallback to old method
+                all_voices = self.voices_lib()
+                for voice in all_voices:
+                    if voice.name == voice_name:
+                        return voice.voice_id
+                return all_voices[0].voice_id if all_voices else "21m00Tcm4TlvDq8ikWAM"
+        except Exception as e:
+            print(f"Voice lookup failed: {e}, using default voice")
             return "21m00Tcm4TlvDq8ikWAM"
 
     def get_available_voices(self):
