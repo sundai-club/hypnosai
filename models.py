@@ -29,12 +29,12 @@ class VoicePreference(str, Enum):
     AUTHENTIC_PRIMAL = "authentic_primal"
 
 class UserInput(BaseModel):
-    name: str = Field(..., min_length=1, max_length=50)
-    age: int = Field(..., ge=18, le=100)
-    gender: Gender
-    personality: str = Field(..., min_length=10, max_length=500)
-    belief_orientation: BeliefOrientation
-    tone: Tone
+    name: Optional[str] = Field(default="Guest", max_length=50)
+    age: Optional[int] = Field(default=None, ge=18, le=100)
+    gender: Optional[Gender] = Field(default=None)
+    personality: Optional[str] = Field(default=None, max_length=500)
+    belief_orientation: Optional[BeliefOrientation] = Field(default=None)
+    tone: Optional[Tone] = Field(default=Tone.CALMED)
     script_type: ScriptType = ScriptType.TEST
     voice_preference: VoicePreference = VoicePreference.AUTHENTIC_PRIMAL
     duration_minutes: Optional[int] = Field(default=10, ge=5, le=60)

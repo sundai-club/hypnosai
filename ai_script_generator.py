@@ -48,13 +48,13 @@ class AIScriptGenerator:
             with open('prompt.txt', 'r', encoding='utf-8') as f:
                 base_prompt = f.read()
             
-            # Replace the placeholders in the prompt with user data
-            prompt = base_prompt.replace('<name = ', f'<name = {user_input.name}')
-            prompt = prompt.replace('age = ', f'age = {user_input.age}')
-            prompt = prompt.replace('gender = ', f'gender = {user_input.gender.value}')
-            prompt = prompt.replace('personality = ', f'personality = {user_input.personality}')
-            prompt = prompt.replace('belief orientation = ', f'belief orientation = {user_input.belief_orientation.value}')
-            prompt = prompt.replace('tone = ', f'tone = {user_input.tone.value}')
+            # Replace the placeholders in the prompt with user data, handling None values
+            prompt = base_prompt.replace('<name = ', f'<name = {user_input.name or "Guest"}')
+            prompt = prompt.replace('age = ', f'age = {user_input.age or "not specified"}')
+            prompt = prompt.replace('gender = ', f'gender = {user_input.gender.value if user_input.gender else "not specified"}')
+            prompt = prompt.replace('personality = ', f'personality = {user_input.personality or "not specified"}')
+            prompt = prompt.replace('belief orientation = ', f'belief orientation = {user_input.belief_orientation.value if user_input.belief_orientation else "neutral"}')
+            prompt = prompt.replace('tone = ', f'tone = {user_input.tone.value if user_input.tone else "calmed"}')
             prompt = prompt.replace('poetic-literary =', f'poetic-literary = {user_input.voice_preference == VoicePreference.POETRY_LITERARY}')
             prompt = prompt.replace('authoritative-permissive = ', f'authoritative-permissive = permissive')
             prompt = prompt.replace('susceptibility =', f'susceptibility = {susceptibility}')
@@ -101,12 +101,15 @@ class AIScriptGenerator:
             return self._generate_with_templates(user_input)
     
     def _generate_with_templates(self, user_input: UserInput) -> str:
-        """Fallback template-based generation"""
+        """Fallback template-based generation with graceful handling of missing data"""
         # This is a simplified version of the original template system
         script_parts = []
         
+        # Use name or default to "Guest"
+        name = user_input.name or "Guest"
+        
         # Induction
-        script_parts.append(f"Welcome, {user_input.name}. Find a comfortable position and allow yourself to settle in.")
+        script_parts.append(f"Welcome, {name}. Find a comfortable position and allow yourself to settle in.")
         script_parts.append("[pause]")
         script_parts.append("Take a deep breath in... and slowly breathe out. With each breath, feel yourself becoming more relaxed and at peace.")
         script_parts.append("[pause]")
@@ -121,6 +124,8 @@ class AIScriptGenerator:
                 script_parts.append("Take your time to settle in, allowing yourself to become more comfortable with each breath.")
             else:
                 script_parts.append("There's no pressure here, just gentle relaxation at your own natural pace.")
+        else:
+            script_parts.append("Allow yourself to relax at whatever pace feels natural and comfortable for you.")
         
         script_parts.append("[pause]")
         
@@ -143,11 +148,13 @@ class AIScriptGenerator:
         
         script_parts.append("[pause]")
         
-        # Belief orientation adaptation
+        # Belief orientation adaptation (handle None values)
         if user_input.belief_orientation == BeliefOrientation.SPIRITUAL:
             script_parts.append("Connect with the divine wisdom within you, feeling guided and supported by universal love.")
         elif user_input.belief_orientation == BeliefOrientation.SCIENTIFIC:
             script_parts.append("Your mind's natural neuroplasticity allows for positive changes at the cellular level.")
+        else:
+            script_parts.append("Trust in your inner wisdom and natural ability to heal and grow.")
         
         script_parts.append("[pause]")
         

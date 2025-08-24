@@ -365,20 +365,20 @@
                 <form id="userForm">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="name">Name:</label>
-                            <input type="text" id="name" name="name" required maxlength="50">
+                            <label for="name">Name (optional):</label>
+                            <input type="text" id="name" name="name" maxlength="50" placeholder="Leave blank for 'Guest'">
                         </div>
                         <div class="form-group">
-                            <label for="age">Age:</label>
-                            <input type="number" id="age" name="age" required min="18" max="100">
+                            <label for="age">Age (optional):</label>
+                            <input type="number" id="age" name="age" min="18" max="100" placeholder="Optional">
                         </div>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="gender">Gender:</label>
-                            <select id="gender" name="gender" required>
-                                <option value="">Select gender</option>
+                            <label for="gender">Gender (optional):</label>
+                            <select id="gender" name="gender">
+                                <option value="">Skip this question</option>
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
                                 <option value="non_binary">Non-binary</option>
@@ -386,9 +386,9 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="belief_orientation">Belief Orientation:</label>
-                            <select id="belief_orientation" name="belief_orientation" required>
-                                <option value="">Select orientation</option>
+                            <label for="belief_orientation">Belief Orientation (optional):</label>
+                            <select id="belief_orientation" name="belief_orientation">
+                                <option value="">Skip this question</option>
                                 <option value="spiritual">Spiritual</option>
                                 <option value="scientific">Scientific</option>
                                 <option value="neutral">Neutral</option>
@@ -397,25 +397,23 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="personality">Personality Description:</label>
-                        <textarea id="personality" name="personality" required minlength="10" maxlength="500" placeholder="Describe your personality, traits, and what makes you unique..."></textarea>
+                        <label for="personality">Personality Description (optional):</label>
+                        <textarea id="personality" name="personality" maxlength="500" placeholder="Optional: Describe your personality, traits, and what makes you unique..."></textarea>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
                             <label for="tone">Preferred Tone:</label>
-                            <select id="tone" name="tone" required>
-                                <option value="">Select tone</option>
-                                <option value="calmed">Calmed</option>
+                            <select id="tone" name="tone">
+                                <option value="calmed">Calmed (default)</option>
                                 <option value="spiritual">Spiritual</option>
                                 <option value="conversational">Conversational</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="script_type">Session Type:</label>
-                            <select id="script_type" name="script_type" required>
-                                <option value="">Select type</option>
-                                <option value="test">General Relaxation</option>
+                            <select id="script_type" name="script_type">
+                                <option value="test">General Relaxation (default)</option>
                                 <option value="flight">Elevating Journey</option>
                                 <option value="next">New Beginnings</option>
                                 <option value="low">Deep Relaxation</option>
@@ -426,10 +424,9 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="voice_preference">Voice Style:</label>
-                            <select id="voice_preference" name="voice_preference" required>
-                                <option value="">Select voice style</option>
+                            <select id="voice_preference" name="voice_preference">
+                                <option value="authentic_primal">Authentic & Primal (default)</option>
                                 <option value="poetry_literary">Poetry & Literary</option>
-                                <option value="authentic_primal">Authentic & Primal</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -446,15 +443,15 @@
                 </form>
                 
                 <div class="button-group">
-                    <div></div>
-                    <button class="btn btn-primary" onclick="goToStep(2)">Take Predisposition Test</button>
+                    <button class="btn btn-secondary" onclick="skipToGenerate()">Skip Quiz - Generate Now</button>
+                    <button class="btn btn-primary" onclick="goToStep(2)">Take Assessment (Optional)</button>
                 </div>
             </div>
             
             <!-- Step 2: Predisposition Test -->
             <div class="step" id="step2">
-                <h2>Hypnosis Predisposition Assessment</h2>
-                <p style="margin-bottom: 30px; color: #718096;">This brief assessment helps us understand how you naturally respond to hypnotic suggestions, allowing us to create the most effective session for you.</p>
+                <h2>Hypnosis Predisposition Assessment (Optional)</h2>
+                <p style="margin-bottom: 30px; color: #718096;">This optional assessment helps us understand how you naturally respond to hypnotic suggestions, allowing us to create a more personalized session. You can skip this and still get a great hypnosis experience!</p>
                 
                 <form id="testForm">
                     <div id="questions"></div>
@@ -462,7 +459,8 @@
                 
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
-                    <button class="btn btn-primary" onclick="submitTest()" id="submitTestBtn">View Results & Generate Session</button>
+                    <button class="btn btn-secondary" onclick="skipToGenerate()">Skip Quiz - Generate Now</button>
+                    <button class="btn btn-primary" onclick="submitTest()" id="submitTestBtn">Complete Assessment & Generate</button>
                 </div>
             </div>
             
@@ -558,25 +556,50 @@
 
         function updateSubmitButton() {
             const submitBtn = document.getElementById('submitTestBtn');
-            const allAnswered = userAnswers.length === testQuestions.length && 
-                               userAnswers.every(answer => answer !== undefined);
-            submitBtn.disabled = !allAnswered;
+            // Allow submission even with incomplete answers since test is optional
+            submitBtn.disabled = false;
+        }
+
+        function skipToGenerate() {
+            // Store user data
+            const formData = new FormData(document.getElementById('userForm'));
+            userData = Object.fromEntries(formData.entries());
+            
+            // Convert numeric fields, handling empty values
+            userData.age = userData.age ? parseInt(userData.age) : null;
+            userData.duration_minutes = userData.duration_minutes ? parseInt(userData.duration_minutes) : 10;
+            
+            // Set defaults for empty fields
+            if (!userData.name || userData.name.trim() === '') userData.name = 'Guest';
+            
+            // Skip to results without test data
+            testResults = {
+                percentage: 50, // Default moderate score
+                level: "Medium",
+                description: "You chose to skip the assessment. We'll use a balanced approach for your session.",
+                recommendations: [
+                    "This session uses a moderate approach suitable for most people",
+                    "You can always come back and take the assessment for more personalization",
+                    "Focus on relaxing and enjoying the experience"
+                ]
+            };
+            
+            goToStep(3);
+            displayResults();
         }
 
         function goToStep(step) {
             if (step === 2) {
-                // Validate user form before going to test
-                const form = document.getElementById('userForm');
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return;
-                }
-                
-                // Store user data
-                const formData = new FormData(form);
+                // Store user data (no validation required since all fields are optional)
+                const formData = new FormData(document.getElementById('userForm'));
                 userData = Object.fromEntries(formData.entries());
-                userData.age = parseInt(userData.age);
-                userData.duration_minutes = parseInt(userData.duration_minutes);
+                
+                // Convert numeric fields, handling empty values
+                userData.age = userData.age ? parseInt(userData.age) : null;
+                userData.duration_minutes = userData.duration_minutes ? parseInt(userData.duration_minutes) : 10;
+                
+                // Set defaults for empty fields
+                if (!userData.name || userData.name.trim() === '') userData.name = 'Guest';
             }
 
             // Hide all steps
@@ -593,12 +616,18 @@
         }
 
         async function submitTest() {
-            // Calculate test score
+            // Calculate test score with partial answers allowed
             try {
+                // Fill missing answers with neutral values (index 1 = moderate response)
+                const completeAnswers = [];
+                for (let i = 0; i < testQuestions.length; i++) {
+                    completeAnswers[i] = userAnswers[i] !== undefined ? userAnswers[i] : 1;
+                }
+                
                 const response = await fetch('/api/calculate-score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ answers: userAnswers })
+                    body: JSON.stringify({ answers: completeAnswers })
                 });
                 
                 testResults = await response.json();
@@ -608,7 +637,19 @@
                 
             } catch (error) {
                 console.error('Error calculating score:', error);
-                showError('Failed to calculate test results');
+                // Fallback to default results if test fails
+                testResults = {
+                    percentage: 50,
+                    level: "Medium",
+                    description: "Unable to calculate exact score, using moderate approach.",
+                    recommendations: [
+                        "This session uses a balanced approach suitable for most people",
+                        "Technical issue prevented score calculation",
+                        "Focus on relaxing and enjoying the experience"
+                    ]
+                };
+                goToStep(3);
+                displayResults();
             }
         }
 
