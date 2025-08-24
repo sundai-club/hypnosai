@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from typing import Optional
 from enum import Enum
 
 class Gender(str, Enum):
@@ -37,9 +37,9 @@ class UserInput(BaseModel):
     tone: Tone
     script_type: ScriptType = ScriptType.TEST
     voice_preference: VoicePreference = VoicePreference.AUTHENTIC_PRIMAL
-    duration_minutes: Optional[int] = Field(default=10, ge=5, le=60)
-    predisposition_score: Optional[float] = Field(default=None, ge=0, le=100)
-    predisposition_level: Optional[str] = Field(default=None)
+    duration_minutes: Optional[int] = Field(10, ge=5, le=60)
+    predisposition_score: Optional[float] = Field(None, ge=0, le=100)
+    predisposition_level: Optional[str] = None
 
 class HypnosisResponse(BaseModel):
     script: str
